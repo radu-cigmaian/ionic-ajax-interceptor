@@ -5,7 +5,6 @@
     angular.module("ionic-ajax-interceptor", ['ionic']);
 
 }());
-
 (function(app) {
     'use strict';
 
@@ -18,16 +17,14 @@
             authorizationToken: null,
             stateChangeError: true,
             fallbackIp: null,
-
-            transformRequest: null,
-            transformResponse: null
+            errHandler : {}
         };
 
         return {
             config: function (options) {
                 angular.extend(_config, options);
 
-                $httpProvider.interceptors.push(["$rootScope", "$q", "$injector", function($rootScope, $q, $injector) {
+                $httpProvider.interceptors.push(["$rootScope", "$q", "$injector", "Constants", function($rootScope, $q, $injector, Constants) {
                     return {
                         request: function(req) {
                             $rootScope.$broadcast('loading:show');
@@ -35,6 +32,7 @@
                             if ( _config.authorizationToken ) {
                                 req.headers[ _config.authorizationHeader ] = _config.authorizationToken;
                             }
+                            req.headers['App-Version'] = Constants.version;
 
                             return req;
                         },
@@ -47,7 +45,6 @@
                             return response;
                         },
                         responseError : function (err) {
-                            //console.log(res);
                             if (err.status == 0) {
                                 var aux = err.config.url.split("/");
                                 //
@@ -62,26 +59,20 @@
                                 }
                             }
                             $rootScope.$broadcast('loading:hide');
+                            if (_config.errHandler[err.status]){
+                                _config.errHandler[err.status](err);
+                                return {};
+                            }
                             return $q.reject(err);
                         }
                     }
-                }]);
-                //
-                // User configurable transformers
-                //
-                if (_config.transformRequest) {
-                    $httpProvider.defaults.transformRequest.push(_config.transformRequest);
-                }
-                if (_config.transformResponse) {
-                    $httpProvider.defaults.transformResponse.push(_config.transformResponse);
-                }
+                }])
             },
             $get: [
                 '$ionicPopup',
                 '$ionicLoading',
                 '$rootScope',
-                '$http',
-                function($ionicPopup, $ionicLoading, $rootScope, $http) {
+                function($ionicPopup, $ionicLoading, $rootScope) {
 
                     var _ajaxRequestsInQ = 0;
 
@@ -94,7 +85,7 @@
                             $ionicLoading.show({
                                 content: 'Loading',
                                 animation: 'fade-in',
-                                showBackdrop: true,
+                                showBackdrop: false,
                                 maxWidth: 200,
                                 showDelay: 0
                             });
@@ -107,7 +98,6 @@
                      */
                     var _hideLoading = function() {
                         _ajaxRequestsInQ--;
-
                         if ( _ajaxRequestsInQ == 0 ) {
                             $ionicLoading.hide();
                         } else if ( _ajaxRequestsInQ < 0 ) {
@@ -145,12 +135,18 @@
                                 _hideLoading();
                             });
                         },
+                        setErrorHandler : function(errHandler){
+                            _config.errHandler = errHandler;
+                        },
                         /**
                          *
                          * @param token
                          */
                         setAuthorizationToken: function(token) {
                             _config.authorizationToken = token;
+                        },
+                        getAuthorizationToken : function(){
+                            return _config.authorizationToken;
                         },
                         /**
                          *
