@@ -1,3 +1,10 @@
+
+(function() {
+    'use strict';
+
+    angular.module("ionic-ajax-interceptor", ['ionic']);
+
+}());
 (function(app) {
     'use strict';
 
@@ -38,20 +45,27 @@
                             return response;
                         },
                         responseError : function (err) {
-                            if (err.status == 0) {
+                            $rootScope.$broadcast('loading:hide');
+                            if (err.status == 0 || err.status == -1 || err.status >= 500) {
                                 var aux = err.config.url.split("/");
                                 //
-                                // Retry once more with fallback ip
+                                // Swith between fallback and old ip in order to get good response
                                 //
-                                if (aux[2] !== _config.fallbackIp) {
+                                if (aux[2] != _config.fallbackIp) {
                                     aux[2] = _config.fallbackIp;
+                                    _config.svdUrl = err.config.url;
                                     err.config.url = aux.join("/");
-
-                                    var $http = $injector.get('$http');
-                                    return $http(err.config);
+                                }else{
+                                    err.config.url = _config.svdUrl;
+                                    if (Number(err.status) < 500){
+                                        alert("Va rugam verificati conexiunea la internet, aplicatia nu s-a putut conecta la server." );
+                                    }else{
+                                        alert("Va rugam verificati conexiunea la internet, aplicatia nu s-a putut conecta la server. \nStatus:" + err.status );
+                                    }
                                 }
+                                var $http = $injector.get('$http');
+                                return $http(err.config);
                             }
-                            $rootScope.$broadcast('loading:hide');
                             if (_config.errHandler[err.status]){
                                 _config.errHandler[err.status](err);
                                 return {};
