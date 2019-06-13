@@ -13,7 +13,7 @@
         var _config = {
             title: "Error",
             defaultMessage: "Unknown error",
-            authorizationHeader: "Authorization",
+            authorizationHeader: "authorization",
             authorizationToken: null,
             stateChangeError: true,
             fallbackIp: null,
@@ -42,10 +42,19 @@
                         },
                         response: function(response) {
                             $rootScope.$broadcast('loading:hide');
+
+                            if (response.headers() && response.headers()[ _config.authorizationHeader ] && response.headers()[ _config.authorizationHeader ] != _config.authorizationToken){
+                                //alert('Old: ' + _config.authorizationToken  + '    \nNew:' + response.headers()[ _config.authorizationHeader ]);
+                                _config.authorizationToken = response.headers()[ _config.authorizationHeader ];
+                                if (_config.authChangeCallback){
+                                    _config.authChangeCallback(_config.authorizationToken);
+                                }
+                            }
                             return response;
                         },
                         responseError : function (err) {
                             $rootScope.$broadcast('loading:hide');
+                            //alert('Err: ' + err.status);
                             if (err.status == 0 || err.status == -1 || err.status >= 500) {
                                 var aux = err.config.url.split("/");
                                 //
@@ -55,6 +64,7 @@
                                     aux[2] = _config.fallbackIp;
                                     _config.svdUrl = err.config.url;
                                     err.config.url = aux.join("/");
+                                    //alert('Fallback')
                                 }else{
                                     err.config.url = _config.svdUrl;
                                     if (Number(err.status) < 500){
@@ -151,6 +161,9 @@
                          */
                         setAuthorizationToken: function(token) {
                             _config.authorizationToken = token;
+                        },
+                        setAuthChangeCallback : function(authChangeCallback){
+                            _config.authChangeCallback = authChangeCallback;
                         },
                         getAuthorizationToken : function(){
                             return _config.authorizationToken;
