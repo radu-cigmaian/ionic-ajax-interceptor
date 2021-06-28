@@ -8,21 +8,23 @@ var src = [
     './src/ionic-ajax-interceptor.service.js'
 ];
 
-gulp.task('buildmin', function() {
+gulp.task('buildmin', function(done) {
     gulp.src(src)
         .pipe(concat('ionic-ajax-interceptor.min.js'))
         .pipe(uglify())
         .pipe(gulp.dest('./dist/'))
+    done();
 });
 
-gulp.task('build', function() {
+gulp.task('build', function(done) {
     gulp.src(src)
         .pipe(concat('ionic-ajax-interceptor.js'))
-        .pipe(gulp.dest('./dist/'))
+        .pipe(gulp.dest('./dist/'));
+    done();
 });
 
 gulp.task('watch', function() {
     gulp.watch('./src/*', ['build', 'buildmin']);
 });
 
-gulp.task('default', ['build', 'buildmin']);
+gulp.task('default', gulp.series(['build', 'buildmin']));

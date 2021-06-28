@@ -24,9 +24,8 @@
   },
   "homepage": "https://github.com/petruisfan/ionic-ajax-interceptor#readme",
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0",
+    "gulp": "^4.0.1",
+    "gulp-concat": "^2.6.1",
     "gulp-uglify": "^1.5.1"
-  },
-  "dependencies": {}
+  }
 }
