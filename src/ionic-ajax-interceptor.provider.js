@@ -105,7 +105,7 @@
                                 showBackdrop: false,
                                 maxWidth: 200,
                                 showDelay: 0
-                            });
+                            }).then(function(){},function(){});
                         }
                         _ajaxRequestsInQ++;
                     };
